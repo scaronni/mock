@@ -33,7 +33,7 @@ compilations when generating debuginfo. While this allows the compiler cache
 to be shared across different package NEVRs, it might cause the debuginfo to be
 incorrect.
 The option can be used for issue bisecting if running the debugger is
-unnecessary. ([issue 1395][]https://github.com/rpm-software-management/mock/issues/1395)
+unnecessary. ([issue 1395](https://github.com/rpm-software-management/mock/issues/1395))
 See [ccache documentation](https://ccache.dev/manual/4.10.html#config_hash_dir).
 This option is available since Mock 5.7.
 
