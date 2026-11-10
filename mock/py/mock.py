@@ -64,6 +64,7 @@ from functools import partial
 
 # our imports
 from mockbuild import config
+from mockbuild import subscription_suse
 from mockbuild import util
 from mockbuild.constants import MOCKCONFDIR, VERSION, DEFAULT_UMASK
 from mockbuild.file_downloader import FileDownloader
@@ -720,6 +721,7 @@ def main():
     sys.setrecursionlimit(config_opts["recursion_limit"])
 
     util.subscription_redhat_init(config_opts, uidManager)
+    subscription_suse.subscription_suse_init(config_opts, uidManager)
 
     # allow a different mock group to be specified
     uidManager.fix_different_chrootgid(config_opts)
