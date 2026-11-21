@@ -1,12 +1,18 @@
+config_opts['root'] = 'opensuse-leap-{{ releasever }}-{{ target_arch }}'
+
 config_opts['chroot_setup_cmd'] = 'install patterns-devel-base-devel_rpm_build'
-config_opts['dist'] = 'suse.lp156'  # only useful for --resultdir variable subst
+config_opts['dist'] = 'suse.lp{{ releasever|replace(".", "") }}'  # only useful for --resultdir variable subst
 config_opts['extra_chroot_dirs'] = [ '/run/lock', ]
-config_opts['releasever'] = '15.6'
-config_opts['macros']['%dist'] = '.suse.lp156'
+config_opts['macros']['%dist'] = '.suse.lp{{ releasever|replace(".", "") }}'
 config_opts['package_manager'] = 'dnf'
-config_opts['bootstrap_image'] = 'registry.opensuse.org/opensuse/leap-dnf:{{ releasever }}'
 config_opts['ssl_ca_bundle_path'] = '/var/lib/ca-certificates/ca-bundle.pem'
 config_opts['description'] = 'openSUSE Leap {{ releasever }}'
+
+# Leap 15.3 is the first release built from the SLE binaries. Before it, the
+# non-x86_64 architectures were ports, and there were no SLE update repositories
+# and no leap-dnf images.
+config_opts['leap_sle_binaries'] = config_opts['releasever'] not in ('15.0', '15.1', '15.2')
+config_opts['bootstrap_image'] = '{% if leap_sle_binaries %}registry.opensuse.org/opensuse/leap-dnf:{{ releasever }}{% else %}fedora:latest{% endif %}'
 
 # Due to the nature of the OpenSUSE mirroring system, we can not use
 # metalinks easily and also we can not rely on the fact that baseurl's
@@ -49,10 +55,12 @@ user_agent={{ user_agent }}
 
 [opensuse-leap-oss]
 name=openSUSE Leap $releasever - {{ repo_arch }} - OSS
-baseurl=https://cdn.opensuse.org/distribution/leap/$releasever/repo/oss/
-#metalink=https://cdn.opensuse.org/distribution/leap/$releasever/repo/oss/repodata/repomd.xml.metalink
+baseurl=https://cdn.opensuse.org/{% if not leap_sle_binaries and repo_arch != 'x86_64' %}ports/{{ repo_arch }}/{% endif %}distribution/leap/$releasever/repo/oss/
+#metalink=https://cdn.opensuse.org/{% if not leap_sle_binaries and repo_arch != 'x86_64' %}ports/{{ repo_arch }}/{% endif %}distribution/leap/$releasever/repo/oss/repodata/repomd.xml.metalink
 enabled=1
-gpgkey=file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE-2022
+gpgkey=file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE
+        file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE-2022
+        file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE-Backports
         file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE-Backports-2023
         file:///usr/share/distribution-gpg-keys/suse/RPM-GPG-KEY-SuSE-SLE-15
         file:///usr/share/distribution-gpg-keys/suse/RPM-GPG-KEY-SuSE-SLE-Main-2023
@@ -60,18 +68,20 @@ gpgcheck=1
 
 [opensuse-leap-oss-update]
 name=openSUSE Leap $releasever - {{ repo_arch }} - OSS - Updates
-baseurl=https://cdn.opensuse.org/update/leap/$releasever/oss/
-#metalink=https://cdn.opensuse.org/update/leap/$releasever/oss/repodata/repomd.xml.metalink
+baseurl=https://cdn.opensuse.org/{% if not leap_sle_binaries and repo_arch != 'x86_64' %}ports/{% endif %}update/leap/$releasever/oss/
+#metalink=https://cdn.opensuse.org/{% if not leap_sle_binaries and repo_arch != 'x86_64' %}ports/{% endif %}update/leap/$releasever/oss/repodata/repomd.xml.metalink
 enabled=1
-gpgkey=file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE-2022
+gpgkey=file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE
+        file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE-2022
 gpgcheck=1
-
+{% if leap_sle_binaries %}
 [opensuse-leap-sle-update]
 name=openSUSE Leap $releasever - {{ repo_arch }} - Updates from SUSE Linux Enterprise
 baseurl=https://cdn.opensuse.org/update/leap/$releasever/sle/
 #metalink=https://cdn.opensuse.org/update/leap/$releasever/sle/repodata/repomd.xml.metalink
 enabled=1
-gpgkey=file:///usr/share/distribution-gpg-keys/suse/RPM-GPG-KEY-SuSE-SLE-Main-2023
+gpgkey=file:///usr/share/distribution-gpg-keys/suse/RPM-GPG-KEY-SuSE-SLE-15
+        file:///usr/share/distribution-gpg-keys/suse/RPM-GPG-KEY-SuSE-SLE-Main-2023
 gpgcheck=1
 
 [opensuse-leap-sle-backports-update]
@@ -79,7 +89,8 @@ name=openSUSE Leap $releasever - {{ repo_arch }} - Updates from Backports for SU
 baseurl=https://cdn.opensuse.org/update/leap/$releasever/backports/
 #metalink=https://cdn.opensuse.org/update/leap/$releasever/backports/repodata/repomd.xml.metalink
 enabled=1
-gpgkey=file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE-Backports-2023
+gpgkey=file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE-Backports
+        file:///usr/share/distribution-gpg-keys/opensuse/RPM-GPG-KEY-openSUSE-Backports-2023
 gpgcheck=1
-
+{% endif %}
 """
